@@ -1,29 +1,55 @@
-import { Controller, Get, Post, Patch, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+} from '@nestjs/common';
+import { CreateEventDto } from './create-event.dto';
+import { Event } from './event.entity';
+import { UpdateEventDto } from './update-event.dto';
 
 @Controller('events') // specify a base route for this controller
 export class EventsController {
+  private events: Event[] = [];
   @Get()
   findAll(): string {
-    return 'This action returns all events';
+    return this.events.toString();
   }
 
   @Get(':id')
-  findOne(): string {
-    return 'This action returns one event';
+  findOne(@Param('id') id): string {
+    const event = this.events.find((event) => event.id === Number(id));
+    return event.toString();
   }
 
   @Post()
-  create(): string {
-    return 'This action creates a new event';
+  create(@Body() input: CreateEventDto): string {
+    const event = {
+      ...input,
+      when: new Date(input.when),
+      id: this.events.length + 1,
+    };
+    this.events.push(event);
+    return event.toString();
   }
 
   @Patch(':id')
-  update(): string {
-    return 'This action updates an event';
+  update(@Param('id') id, @Body() input: UpdateEventDto) {
+    const index = this.events.findIndex((event) => event.id === Number(id));
+    this.events[index] = {
+      ...this.events[index],
+      ...input,
+      when: input.when ? new Date(input.when) : this.events[index].when,
+    };
+    return this.events[index].toString();
   }
 
   @Delete(':id')
-  delete(): string {
-    return 'This action deletes an event';
+  remove(@Param('id') id) {
+    this.events = this.events.filter((event) => event.id !== Number(id));
+    return true;
   }
 }
